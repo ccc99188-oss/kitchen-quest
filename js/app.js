@@ -155,7 +155,13 @@ function pageHome() {
     }).join("")}</div>
     <section class="card"><h2>📜 航海日誌</h2>
       ${S.log.length ? `<ul class="log">${S.log.slice(0, 8).map(l => `<li><span class="muted">${esc(l.t)}</span> ${esc(l.text)}</li>`).join("")}</ul>` : `<p class="muted">還沒有紀錄。</p>`}
+    </section>
+    <section class="card center">
+      <h2>🔄 換人玩</h2>
+      <p class="muted">要讓別人在這台電腦玩嗎？可以清除目前的紀錄，從頭開始。</p>
+      <button class="btn danger" id="clearHome">🗑️ 清除紀錄</button>
     </section>`;
+  $("#clearHome").onclick = showClearDialog;
   main.querySelectorAll(".island.locked").forEach(a => a.onclick = (e) => {
     e.preventDefault(); toast(`🔒 還要再完成 ${a.dataset.need - doneCount()} 個任務才能登島！`);
   });
@@ -416,17 +422,45 @@ function pageParent() {
     S.coins -= 50; addLog("使用 50 金幣兌換獎勵"); save(); refreshNav(); pageParent(); toast("🪙 已扣除 50 金幣");
   };
   $("#ua").onchange = (e) => { S.unlockAll = e.target.checked; save(); toast(S.unlockAll ? "已解鎖所有島嶼" : "已恢復依進度解鎖"); };
-  $("#export").onclick = () => {
-    const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
-    const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
-    link.download = "kitchen-quest-save.json"; link.click();
-  };
+  $("#export").onclick = exportSave;
   $("#import").onchange = (e) => {
     const f = e.target.files[0]; if (!f) return;
     f.text().then(t => { try { S = Object.assign(defaultState(), JSON.parse(t)); save(); location.reload(); } catch (err) { toast("檔案格式不對"); } });
   };
-  $("#reset").onclick = () => {
-    if (confirm("確定要清除所有進度嗎？這個動作無法復原。")) { localStorage.removeItem(KEY); location.href = "index.html"; }
+  $("#reset").onclick = showClearDialog;
+}
+
+// ---------- 清除紀錄 ----------
+function exportSave() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
+  const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+  const who = (S.name || "player").replace(/[\\/:*?"<>|\s]/g, "_");
+  link.download = `kitchen-quest-${who}.json`; link.click();
+}
+
+function clearSave() {
+  localStorage.removeItem(KEY);
+  sessionStorage.removeItem("kq-parent");
+  location.href = "index.html";
+}
+
+function showClearDialog() {
+  const m = document.createElement("div");
+  m.className = "modal";
+  m.innerHTML = `<div class="modal-box pop" role="dialog" aria-label="清除紀錄">
+    <div class="big-emoji">🗑️</div>
+    <h2>清除「${esc(S.name || "目前玩家")}」的紀錄？</h2>
+    <p>Lv.${levelInfo().lv}・完成 ${doneCount()} 個任務・${S.creatures.length} 隻食靈</p>
+    <p class="muted">清除後會回到建立角色的畫面，所有任務、金幣、食靈和食譜心得都會消失。</p>
+    <p class="muted">建議先備份，之後可以在「家長區 → 匯入存檔」找回來。</p>
+    <button class="btn" id="cdBackup">💾 先備份再清除</button>
+    <button class="btn danger" id="cdClear">直接清除</button>
+    <button class="btn ghost" id="cdCancel">取消</button></div>`;
+  document.body.appendChild(m);
+  m.querySelector("#cdCancel").onclick = () => m.remove();
+  m.querySelector("#cdBackup").onclick = () => { exportSave(); setTimeout(clearSave, 600); };
+  m.querySelector("#cdClear").onclick = () => {
+    if (confirm("確定不備份就清除嗎？清除後無法復原。")) clearSave();
   };
 }
 
