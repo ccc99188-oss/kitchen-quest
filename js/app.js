@@ -131,7 +131,7 @@ function pageHome() {
     <section class="card hero">
       <div class="hero-av">${S.avatar}</div>
       <div class="grow">
-        <h1>${esc(S.name)} 船長</h1>
+        <h1>${esc(S.name)}${S.name.endsWith("船長") ? "" : " 船長"}</h1>
         <p>Lv.${li.lv}「${esc(li.title)}」${li.next ? `・再 ${li.next.xp - S.xp} 經驗升級` : "・已達最高等級！"}</p>
         <div class="bar"><div style="width:${li.pct}%"></div></div>
         <p class="muted">已完成 ${doneCount()} / ${total} 個任務・收集 ${S.creatures.length} / ${CREATURES.length} 隻食靈</p>

@@ -147,3 +147,4 @@ footer { text-align: center; color: #d8ecf5; font-size: 13px; padding: 10px; }
   .hero, .island-head { flex-direction: column; text-align: center; }
   h1 { font-size: 22px; }
 }
+.quest, .recipe { scroll-margin-top: 130px; }
